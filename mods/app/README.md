@@ -5,5 +5,12 @@
 ### Locally
 
 ```bash
-./mvnw -pl mods/middleware,mods/app
+<<<<<<< HEAD
+./mvnw -pl mods/app
+```
+
+### With middleware
+
+```bash
+./mvnw -Pmiddleware -pl mods/app
 ```

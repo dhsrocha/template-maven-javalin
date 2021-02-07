@@ -29,12 +29,16 @@
 
     <version.plugin.test>3.0.0-M5</version.plugin.test>
 
-    <exec.mainClass>
-      ${project.groupId}.${project.artifactId}.Main
-    </exec.mainClass>
+    <!-- Locations -->
+    <sep>${file.separator}</sep>
+    <dir.main.resources>${sep}src${sep}main${sep}resources</dir.main.resources>
+    <dir.middleware>${dir.main.resources}${sep}middleware</dir.middleware>
 
+    <!-- Executions -->
+    <exec.mainClass/>
     <exec.goals.run>clean compile exec:java</exec.goals.run>
 
+    <!-- Static-Analysis -->
     <!-- https://maven.apache.org/plugins/maven-checkstyle-plugin/check-mojo.html-->
     <checkstyle.config.location>google_checks.xml</checkstyle.config.location>
     <checkstyle.header.file>${project.basedir}/LICENSE</checkstyle.header.file>
@@ -46,7 +50,6 @@
   </properties>
 
   <modules>
-    <module>mods/middleware</module>
     <module>mods/app</module>
   </modules>
 
@@ -107,6 +110,10 @@
         <plugin>
           <artifactId>maven-project-info-reports-plugin</artifactId>
           <version>3.1.1</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>3.0.0</version>
         </plugin>
         <!-- Packaging and running -->
         <plugin>
@@ -267,7 +274,7 @@
       <!-- Standard slf4j/log4j2 configuration file -->
       <resource>
         <directory>
-          ${maven.multiModuleProjectDirectory}${file.separator}src/main/resources
+          ${maven.multiModuleProjectDirectory}${dir.main.resources}
         </directory>
         <includes>
           <include>log4j2.properties</include>
@@ -377,6 +384,33 @@
                 <goals>
                   <goal>check</goal>
                 </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>middleware</id>
+      <build>
+        <defaultGoal>clean antrun:run@middleware</defaultGoal>
+        <plugins>
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <inherited>false</inherited>
+            <executions>
+              <execution>
+                <id>middleware</id>
+                <phase>pre-integration-test</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target name="middleware.build">
+                    <ant dir="${project.basedir}${dir.middleware}"
+                         antFile="build.xml"/>
+                  </target>
+                </configuration>
               </execution>
             </executions>
           </plugin>
