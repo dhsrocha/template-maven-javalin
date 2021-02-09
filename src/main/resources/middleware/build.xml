@@ -1,4 +1,94 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project name="middleware.build" default="all">
-  <target name="all"/>
+  <description>Builds middleware assets for the project</description>
+
+  <property environment="env"/>
+  <property name="nil" value=""/>
+  <!-- ::: Paths ::: -->
+  <property name="path.host" location="/usr/bin/docker"/>
+  <property name="path.machine" location="/usr/local/bin/docker-machine"/>
+  <property name="path.driver" location="/usr/bin/virtualbox"/>
+  <property name="dir.machine.temp" value="/tmp/docker-machine"/>
+  <available property="bool.host.exists" file="${path.host}"/>
+  <available property="bool.machine.exists" file="${path.machine}"/>
+  <available property="bool.driver.exists" file="${path.driver}"/>
+  <fail unless="bool.host.exists" message="Host is not in path!"/>
+  <!-- ::: Nodes names ::: -->
+  <property name="str.manager.name" value="manager"/>
+  <property name="str.worker.1.name" value="worker_1"/>
+  <property name="str.worker.2.name" value="worker_2"/>
+
+  <!-- ::: Tasks ::: -->
+  <echo level="info" message="Middleware build started."/>
+  <target name="all" depends="task.root.name.parse
+                             ,task.install.driver
+                             ,task.install.machine
+                             ">
+    <antstructure output="ant.dtd"/>
+    <echo level="info" message="Middleware build finished."/>
+  </target>
+
+  <!-- ::: Prepare ::: -->
+  <target name="task.root.name.parse"
+          description="Replaces dashes by underscores from project base directory's name.">
+    <exec executable="sh" outputproperty="str.root.name" failonerror="true">
+      <arg line="-c 'echo ${env.PWD} | sed s/-/_/g | sed s:.*/::'"/>
+    </exec>
+  </target>
+
+  <!-- ::: Install Virtualbox ::: -->
+  <target name="task.install.driver"
+          unless="bool.driver.exists"
+          description="Installs virtualbox if is not found in $PATH.">
+    <echo level="warn" message="${path.driver} not found in path."/>
+    <exec executable="sudo" failonerror="true"
+          inputstring="deb https://download.virtualbox.org/virtualbox/debian buster contrib">
+      <arg value="tee"/>
+      <arg value="/etc/apt/sources.list.d/virtualbox.list"/>
+    </exec>
+    <echo level="warn" message="Download ${path.driver} GPG key."/>
+    <exec executable="sh" failonerror="true">
+      <arg line="-c 'wget -O /tmp/oracle_vbox.asc
+                          https://www.virtualbox.org/download/oracle_vbox_2016.asc'"/>
+    </exec>
+    <echo level="warn" message="Add ${path.driver} GPG key to system."/>
+    <exec executable="sh" failonerror="true">
+      <arg line="-c 'sudo apt-key add /tmp/oracle_vbox.asc'"/>
+    </exec>
+    <echo level="warn" message="Update repository indexes."/>
+    <exec executable="sh" failonerror="true">
+      <arg line="-c 'sudo apt update'"/>
+    </exec>
+    <echo level="warn" message="Install ${path.driver} from repository."/>
+    <exec executable="sh" failonerror="true">
+      <arg line="-c 'sudo apt install -y virtualbox-6.0'"/>
+    </exec>
+    <echo level="verbose" message="${path.driver} installed."/>
+    <exec executable="${path.driver}" failonerror="true">
+      <arg line="--help"/>
+    </exec>
+  </target>
+
+  <!-- ::: Install Machine ::: -->
+  <target name="task.install.machine"
+          unless="bool.machine.exists"
+          description="Installs docker-machine if is not found in $PATH.">
+    <echo level="warn" message="${path.machine} not found in path."/>
+    <exec executable="sh" failonerror="true">
+      <arg line="-c 'curl -L https://github.com/docker/machine/releases/download/v0.12.2/docker-machine-`uname -s`-`uname -m`
+                >${dir.machine.temp}'"/>
+    </exec>
+    <echo level="warn" message="${path.machine} not found in path."/>
+    <exec executable="sh" failonerror="true">
+      <arg line="-c 'chmod +x ${dir.machine.temp}'"/>
+    </exec>
+    <echo level="warn" message="${path.machine} not found in path."/>
+    <exec executable="sh" failonerror="true">
+      <arg line="-c 'sudo cp ${dir.machine.temp} ${path.machine}'"/>
+    </exec>
+    <echo level="verbose" message="${path.machine} installed."/>
+    <exec executable="${path.machine}" failonerror="true">
+      <arg line="-v"/>
+    </exec>
+  </target>
 </project>
