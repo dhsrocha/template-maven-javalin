@@ -1,0 +1,112 @@
+version: '3.8'
+
+networks:
+  lb_proxy:
+    driver: overlay
+    attachable: true
+  agent_network:
+    driver: overlay
+    attachable: true
+
+volumes:
+  portainer_data:
+  traefik-logs:
+  traefik-certs:
+
+services:
+  traefik:
+    image: traefik:v2.3.2
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        labels: "traefik"
+        compress: "true"
+    command:
+      - --log=true
+      - --log.level=DEBUG
+      - --api=true
+      - --api.debug=true
+      - --api.dashboard=true
+      - --accessLog=true
+      - --accessLog.filePath=/var/log/traefik/access.log
+      - --accessLog.bufferingSize=100
+      - --accessLog.filters.statusCodes=400-499
+      - --providers.docker=true
+      - --providers.docker.swarmMode=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.http.address=:80
+      - --entrypoints.https.address=:443
+      - --entrypoints.https.http.tls.options=tls-opts@file
+      - --providers.file.directory=/rules
+      - --providers.file.watch=true
+      - --certificatesresolvers.le.acme.storage=/certificates/acme.json
+      - --certificatesresolvers.le.acme.email=you@example.com
+      - --certificatesresolvers.le.acme.tlschallenge=true
+      - --providers.docker.network=lb_proxy
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - lb_proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./rules:/rules
+      - ./.htpasswd:/opt/.htpasswd
+      - traefik-certs:/certificates
+      - traefik-logs:/var/log/traefik
+    deploy:
+      mode: replicated
+      replicas: 1
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.api.rule=Host(`traefik.home`)
+        - traefik.http.routers.api.service=api@internal
+        - traefik.http.services.dummyservice.loadbalancer.server.port=1111
+        - traefik.http.middlewares.admin-auth.basicauth.usersFile=/opt/.htpasswd
+        - traefik.http.routers.api.middlewares=admin-auth
+      placement:
+        constraints:
+          - node.role == manager
+          - node.labels.traefik == true
+
+  agent:
+    image: portainer/agent
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+    networks:
+      - agent_network
+      - lb_proxy
+    environment:
+      AGENT_CLUSTER_ADDR: tasks.agent
+      AGENT_PORT: 9001
+      LOG_LEVEL: debug
+    deploy:
+      mode: global
+      labels:
+        - traefik.enable=true
+        - traefik.tcp.services.agent.loadbalancer.server.port=9001
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    command: -H tcp://tasks.agent:9001 --tlsskipverify
+    volumes:
+      - portainer_data:/data
+    networks:
+      - lb_proxy
+      - agent_network
+    deploy:
+      mode: replicated
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints: [node.role == worker]
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.portainer.rule=Host(`portainer.home`)
+        - traefik.http.routers.portainer.entryPoints=http
+        - traefik.http.routers.portainer.service=portainer
+        - traefik.http.services.portainer.loadbalancer.server.port=9000

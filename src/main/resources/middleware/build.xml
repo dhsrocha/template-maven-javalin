@@ -23,7 +23,11 @@
   <target name="all" depends="task.root.name.parse
                              ,task.install.driver
                              ,task.install.machine
-                             ">
+                             ,task.cluster.manager.exists
+                             ,task.cluster.manager.create
+                             ,task.cluster.manager.is.on
+                             ,task.cluster.manager.turn.on
+                             ,task.stack.deploy">
     <antstructure output="ant.dtd"/>
     <echo level="info" message="Middleware build finished."/>
   </target>
@@ -91,4 +95,72 @@
       <arg line="-v"/>
     </exec>
   </target>
+
+  <!-- ::: Create manager machine ::: -->
+  <target name="task.cluster.manager.exists"
+          depends="task.install.driver,task.install.machine"
+          description="Checks if ${str.manager.name} machine exists.">
+    <echo level="warn" message="Checking if ${str.manager.name} exists."/>
+    <exec executable="${path.machine}" outputproperty="str.cluster.name.found"
+          failonerror="true">
+      <arg line="ls --filter name=${str.manager.name} -q"/>
+    </exec>
+    <condition property="bool.cluster.manager.exists">
+      <equals arg1="${str.cluster.name.found}" arg2="${str.manager.name}"/>
+    </condition>
+  </target>
+  <target name="task.cluster.manager.create"
+          unless="bool.cluster.manager.exists"
+          depends="task.cluster.manager.exists"
+          description="Creates manager virtual machine for the cluster.">
+    <echo level="warn" message="Creating ${str.manager.name} machine."/>
+    <exec executable="${path.machine}" failonerror="true">
+      <arg line="create -d virtualbox --swarm
+                                      --swarm-master ${str.manager.name}"/>
+    </exec>
+  </target>
+
+  <!-- ::: Turn manager machine on ::: -->
+  <target name="task.cluster.manager.is.on"
+          depends="task.cluster.manager.exists"
+          description="Checks if manager machine is on.">
+    <echo level="warn"
+          message="Checking if ${str.manager.name} machine is on."/>
+    <exec executable="${path.machine}" outputproperty="str.manager.state.found"
+          failonerror="true">
+      <arg line="inspect ${str.manager.name} -f {{.Driver.IPAddress}}"/>
+    </exec>
+    <condition property="bool.manager.state.found">
+      <not>
+        <isset property="${str.manager.state.found}"/>
+      </not>
+    </condition>
+  </target>
+  <target name="task.cluster.manager.turn.on"
+          depends="task.cluster.manager.exists"
+          unless="bool.manager.state.found"
+          description="Turn manager machine on.">
+    <echo level="warn" message="Starting ${str.manager.name} machine."/>
+    <exec executable="${path.machine}" outputproperty="str.cluster.name.found"
+          failonerror="true">
+      <arg line="start ${str.manager.name}"/>
+    </exec>
+  </target>
+
+  <!-- ::: Stack ::: -->
+  <target name="task.stack.deploy"
+          depends="task.install.machine,task.cluster.manager.create"
+          description="Deploys middleware assets.">
+    <echo level="warn" message="Deploying middleware stack."/>
+    <exec executable="eval" failonerror="true">
+      <arg line="$(${path.machine} env ${str.manager.name})"/>
+    </exec>
+    <exec executable="${path.machine}" failonerror="true">
+      <arg line="active"/>
+    </exec>
+    <exec executable="${path.host}" failonerror="true">
+      <arg line="stack deploy --compose-file middleware.yml ${str.root.name}"/>
+    </exec>
+  </target>
+
 </project>
