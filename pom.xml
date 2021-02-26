@@ -383,6 +383,44 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>middleware</id>
+      <build>
+        <defaultGoal>clean exec:java@middleware-startup</defaultGoal>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <inherited>false</inherited>
+            <executions>
+              <execution>
+                <id>middleware-startup</id>
+                <phase>pre-integration-test</phase>
+                <inherited>false</inherited>
+                <goals>
+                  <goal>java</goal>
+                </goals>
+                <configuration>
+                  <mainClass>org.jruby.Main</mainClass>
+                  <commandlineArgs>
+                    ${project.basedir}/src/main/resources/orchestrator/build.rb
+                  </commandlineArgs>
+                  <includeProjectDependencies>false</includeProjectDependencies>
+                  <includePluginDependencies>true</includePluginDependencies>
+                </configuration>
+              </execution>
+            </executions>
+            <dependencies>
+              <dependency>
+                <groupId>org.jruby</groupId>
+                <artifactId>jruby-complete</artifactId>
+                <version>9.2.15.0</version>
+              </dependency>
+            </dependencies>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 
 </project>
