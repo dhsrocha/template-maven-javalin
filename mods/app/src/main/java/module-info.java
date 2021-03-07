@@ -8,6 +8,17 @@ module template.app {
   requires dagger;
   // Application
   requires io.javalin;
+  requires org.mapstruct;
+  requires ehcache;
+  requires gson;
+  requires feign.core;
+  requires feign.gson;
+  // Persistence
+  requires java.sql;
+  requires org.mybatis;
+  requires org.mybatis.migrations;
+  requires org.mybatis.dynamic.sql;
+  requires com.h2database;
 
   // Open for testing
   opens template;

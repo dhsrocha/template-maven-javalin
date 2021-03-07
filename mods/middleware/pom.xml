@@ -21,7 +21,7 @@
 
   <properties>
     <version.docker.java>3.2.7</version.docker.java>
-    <exec.mainClass>template.Main</exec.mainClass>
+    <exec.mainClass>template.Application</exec.mainClass>
   </properties>
 
   <build>

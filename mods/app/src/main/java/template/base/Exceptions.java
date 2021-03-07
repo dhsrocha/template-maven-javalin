@@ -14,6 +14,10 @@ public enum Exceptions {
    * Indicates that a domain object received invalid parameters.
    */
   INVALID_DOMAIN,
+  /**
+   * Indicates that a entity object was not successfully inserted.
+   */
+  NOT_INSERTED,
   ;
 
   /**

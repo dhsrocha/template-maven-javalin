@@ -47,7 +47,8 @@ public interface Application extends Supplier<Infra> {
    * Defines application's features.
    */
   enum Feat {
-    DEFAULT; // Just a placeholder
+    USER,
+    ;
 
     static Feat[] from(final @NonNull String... args) {
       return Arrays.stream(args).map(Feat::valueOf).toArray(Feat[]::new);

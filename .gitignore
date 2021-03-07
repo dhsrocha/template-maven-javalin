@@ -1,6 +1,6 @@
 
-# Created by https://www.toptal.com/developers/gitignore/api/eclipse,intellij+all,code,java,maven,terraform
-# Edit at https://www.toptal.com/developers/gitignore?templates=eclipse,intellij+all,code,java,maven,terraform
+# Created by https://www.toptal.com/developers/gitignore/api/eclipse,intellij+all,code,java,maven,gradle,terraform
+# Edit at https://www.toptal.com/developers/gitignore?templates=eclipse,intellij+all,code,java,maven,gradle,terraform
 
 ### Code ###
 .vscode/*
@@ -201,6 +201,25 @@ buildNumber.properties
 .mvn/timing.properties
 # https://github.com/takari/maven-wrapper#usage-without-binary-jar
 .mvn/wrapper/maven-wrapper.jar
+
+### Gradle ###
+.gradle
+build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+!gradle-wrapper.jar
+
+# Cache of project
+.gradletasknamecache
+
+# # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
+# gradle/wrapper/gradle-wrapper.properties
+
+### Gradle Patch ###
+**/build/
 
 ### Terraform ###
 # Local .terraform directories

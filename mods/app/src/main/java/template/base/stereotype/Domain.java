@@ -12,4 +12,9 @@ public interface Domain<D extends Domain<D>> extends Validated,
     INVALID_DOMAIN.throwIf(IllegalArgumentException::new, () -> !d.isValid());
     return d;
   }
+
+  interface Ref<D extends Domain<D>> {
+
+    Class<D> domainRef();
+  }
 }

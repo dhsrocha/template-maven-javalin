@@ -1,8 +1,13 @@
 package template.feature.user;
 
+import dagger.Binds;
 import java.util.Comparator;
+import java.util.UUID;
 import lombok.NonNull;
 import lombok.Value;
+import template.base.contract.CacheManager;
+import template.base.contract.Controller;
+import template.base.contract.Repository;
 import template.base.stereotype.Domain;
 
 @Value
@@ -25,5 +30,18 @@ public class User implements Domain<User> {
     return Comparator.comparing(User::getAge)
                      .thenComparing(User::getName)
                      .compare(this, user);
+  }
+
+  @dagger.Module
+  public interface Mod {
+
+    @Binds
+    CacheManager<User, UUID> cacheManager(final UserCache u);
+
+    @Binds
+    Repository.Cached<User, UUID> repository(final UserRepository u);
+
+    @Binds
+    Controller<User> controller(final UserController u);
   }
 }
