@@ -8,6 +8,12 @@ module template.app {
   requires dagger;
   // Application
   requires io.javalin;
+  // Persistence
+  requires java.sql;
+  requires org.mybatis;
+  requires org.mybatis.dynamic.sql;
+  requires org.mybatis.migrations;
+  requires com.h2database;
 
   // Open for testing
   opens template;
