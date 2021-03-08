@@ -22,7 +22,7 @@ import template.base.contract.Builder;
  * {@code maven-exec-plugin} to be called from command-line.
  */
 @Singleton
-@Component
+@Component(dependencies = Router.class)
 public interface Application extends Supplier<Bootstrap> {
 
   /**
@@ -51,6 +51,7 @@ public interface Application extends Supplier<Bootstrap> {
    */
   enum Feat {
     ALL,
+    AUTH,
     ;
 
     static Feat[] from(final @NonNull String... args) {

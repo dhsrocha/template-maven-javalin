@@ -1,23 +1,33 @@
 package template;
 
+import dagger.Component;
 import io.javalin.apibuilder.ApiBuilder;
 import io.javalin.apibuilder.EndpointGroup;
-import java.util.Arrays;
 import javax.inject.Inject;
+import lombok.val;
 import template.Application.Feat;
+import template.base.contract.Filter;
+import template.feature.auth.Auth;
 
-final class Router implements EndpointGroup {
+@Component(modules = Auth.Module.class)
+abstract class Router implements EndpointGroup {
 
   private final Feat[] feats;
+  private final Filter.WithEndpoint<Auth> auth;
 
   @Inject
-  Router(final Feat[] feats) {
+  Router(final Feat[] feats, final Filter.WithEndpoint<Auth> auth) {
     this.feats = feats;
+    this.auth = auth;
   }
 
   @Override
-  public void addEndpoints() {
-    ApiBuilder.get(ctx -> ctx.result("It works! Activated features:"
-                                         + Arrays.toString(feats)));
+  public final void addEndpoints() {
+    for (val f : feats) {
+      if (Feat.AUTH == f) {
+        ApiBuilder.before(auth.filter());
+        ApiBuilder.post(auth.pathTo(), auth.endpoint());
+      }
+    }
   }
 }

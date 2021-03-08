@@ -8,7 +8,10 @@ module template.app {
   requires dagger;
   // Application
   requires io.javalin;
-
+  requires com.google.gson;
+  // Auth
+  requires java.jwt;
+  requires jjwt.api;
   // Open for testing
   opens template;
   opens template.feature.user;
