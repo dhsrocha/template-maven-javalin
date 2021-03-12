@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.val;
+import template.Application.Feat;
 
 /**
  * Indexes and parses system properties used in this application.
@@ -22,6 +23,10 @@ enum Props {
    * Application's running port.
    */
   PORT("app.port", "9999"),
+  /**
+   * Application's feature profiles.
+   */
+  FEAT("app.feats", Feat.ALL.name()),
   ;
   private static final Props[] VALUES = values();
   private static final Pattern SPLIT = Pattern.compile("=");
