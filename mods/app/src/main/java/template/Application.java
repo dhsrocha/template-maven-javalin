@@ -2,19 +2,15 @@ package template;
 
 import dagger.BindsInstance;
 import dagger.Component;
-import io.javalin.Javalin;
-import io.javalin.apibuilder.EndpointGroup;
-import io.javalin.plugin.openapi.annotations.ContentType;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.function.Supplier;
-import javax.inject.Inject;
 import javax.inject.Singleton;
 import lombok.NonNull;
 import lombok.val;
 import org.slf4j.LoggerFactory;
-import template.Application.Web;
 import template.base.contract.Builder;
+import template.infra.Infra;
 
 /**
  * Application's entry point.
@@ -23,8 +19,8 @@ import template.base.contract.Builder;
  * {@code maven-exec-plugin} to be called from command-line.
  */
 @Singleton
-@Component(modules = Router.class)
-public interface Application extends Supplier<Web> {
+@Component(modules = {Router.class, Infra.class})
+public interface Application extends Supplier<Infra> {
 
   /**
    * Parses provided arguments and initiates application.
@@ -40,9 +36,9 @@ public interface Application extends Supplier<Web> {
     val feats = Feat.from(props.get(Props.FEAT));
     val port = Integer.parseInt(props.get(Props.PORT));
     val app = DaggerApplication.builder().mode(mode).features(feats).build();
-    val server = app.get().bootstrap(port);
+    val server = app.get().get().start(port);
     if (Objects.requireNonNull(server.server()).getStarted()) {
-      log.info("Application running. [port={}]", server.port());
+      log.info("Application running. [port={}]", port);
       Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
     }
   }
@@ -80,28 +76,5 @@ public interface Application extends Supplier<Web> {
 
     @BindsInstance
     Build features(final @NonNull Feat[] features);
-  }
-
-  /**
-   * Application initialization and bootstrap.
-   */
-  final class Web {
-
-    private final @NonNull Mode mode;
-    private final @NonNull Router routes;
-
-    @Inject
-    Web(final Mode mode, final Router routes) {
-      this.mode = mode;
-      this.routes = routes;
-    }
-
-    Javalin bootstrap(final int port) {
-      return Javalin.create(cfg -> {
-        cfg.showJavalinBanner = mode != Mode.DEV;
-        cfg.defaultContentType = ContentType.JSON;
-        cfg.autogenerateEtags = Boolean.TRUE;
-      }).routes(routes).start(port);
-    }
   }
 }

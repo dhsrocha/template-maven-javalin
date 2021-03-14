@@ -9,7 +9,7 @@ import lombok.NonNull;
 import template.Application.Feat;
 
 @Module
-interface Router extends EndpointGroup {
+public interface Router extends EndpointGroup {
 
   @Provides
   static Router routes(final @NonNull Feat[] feats) {
